@@ -1,159 +1,19 @@
---// SERVICIOS
+--// =========================
+-- ian duels vz (ACTUALIZADO)
+-- =========================
+
+local noWalkConnection1
+local noWalkConnection2
+local lastPos
+
+local fovConnection = nil
+local oldFOV = nil
+
 local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
+ 
+--// ian duels vz CONFIG SYSTEM
 
-local function getParent()
-    local success, parent = pcall(function() return CoreGui end)
-    if success and parent then return parent end
-    return Players.LocalPlayer:WaitForChild("PlayerGui")
-end
-
---// ==========================================
---// LA INTRO ORIGINAL (PREMIUM)
---// ==========================================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "IanVzHubLoadingPremium"
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.Parent = getParent()
-
-local Background = Instance.new("Frame")
-Background.Size = UDim2.new(1, 0, 1, 0)
-Background.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-Background.BackgroundTransparency = 1
-Background.Active = true
-Background.Parent = ScreenGui
-
-local Blur = Instance.new("BlurEffect")
-Blur.Size = 0
-Blur.Parent = Lighting
-
-local Spinner = Instance.new("Frame")
-Spinner.Size = UDim2.new(0, 120, 0, 120)
-Spinner.Position = UDim2.new(0.5, -60, 0.35, -60)
-Spinner.BackgroundTransparency = 1
-Spinner.Parent = Background
-
-local SpinnerStroke = Instance.new("UIStroke")
-SpinnerStroke.Color = Color3.fromRGB(60, 100, 255)
-SpinnerStroke.Thickness = 3
-SpinnerStroke.Transparency = 1
-SpinnerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-SpinnerStroke.Parent = Spinner
-
-local SpinnerCorner = Instance.new("UICorner")
-SpinnerCorner.CornerRadius = UDim.new(1, 0)
-SpinnerCorner.Parent = Spinner
-
-local SpinnerGradient = Instance.new("UIGradient")
-SpinnerGradient.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 0),
-    NumberSequenceKeypoint.new(0.5, 1),
-    NumberSequenceKeypoint.new(1, 0)
-})
-SpinnerGradient.Parent = SpinnerStroke
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(0, 400, 0, 60)
-Title.Position = UDim2.new(0.5, -200, 0.45, -30)
-Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.GothamBlack
-Title.Text = "IANVZ HUB"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 50
-Title.TextTransparency = 1
-Title.Parent = Background
-
-local TitleGlow = Instance.new("UIStroke")
-TitleGlow.Color = Color3.fromRGB(80, 120, 255)
-TitleGlow.Transparency = 1
-TitleGlow.Thickness = 1
-TitleGlow.Parent = Title
-
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(0, 400, 0, 30)
-SubTitle.Position = UDim2.new(0.5, -200, 0.52, 0)
-SubTitle.BackgroundTransparency = 1
-SubTitle.Font = Enum.Font.GothamMedium
-SubTitle.Text = "cargando hub :)"
-SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
-SubTitle.TextSize = 18
-SubTitle.TextTransparency = 1
-SubTitle.Parent = Background
-
-local Percentage = Instance.new("TextLabel")
-Percentage.Size = UDim2.new(0, 100, 0, 30)
-Percentage.Position = UDim2.new(0.5, -50, 0.56, 0)
-Percentage.BackgroundTransparency = 1
-Percentage.Font = Enum.Font.GothamBold
-Percentage.Text = "0%"
-Percentage.TextColor3 = Color3.fromRGB(80, 120, 255)
-Percentage.TextSize = 20
-Percentage.TextTransparency = 1
-Percentage.Parent = Background
-
-local LoadingBarBG = Instance.new("Frame")
-LoadingBarBG.Size = UDim2.new(0.4, 0, 0, 6)
-LoadingBarBG.Position = UDim2.new(0.3, 0, 0.62, 0)
-LoadingBarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-LoadingBarBG.BackgroundTransparency = 1
-LoadingBarBG.Parent = Background
-Instance.new("UICorner", LoadingBarBG).CornerRadius = UDim.new(1, 0)
-
-local LoadingBarFill = Instance.new("Frame")
-LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
-LoadingBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-LoadingBarFill.BackgroundTransparency = 1
-LoadingBarFill.Parent = LoadingBarBG
-Instance.new("UICorner", LoadingBarFill).CornerRadius = UDim.new(1, 0)
-
-local FillGradient = Instance.new("UIGradient")
-FillGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 100, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 180, 255))
-})
-FillGradient.Parent = LoadingBarFill
-
---// ANIMACIONES INICIALES
-local fadeInfo = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-TweenService:Create(Background, fadeInfo, {BackgroundTransparency = 0.15}):Play()
-TweenService:Create(Title, fadeInfo, {TextTransparency = 0, Position = UDim2.new(0.5, -200, 0.45, -40)}):Play()
-TweenService:Create(TitleGlow, fadeInfo, {Transparency = 0.4}):Play()
-TweenService:Create(SubTitle, fadeInfo, {TextTransparency = 0}):Play()
-TweenService:Create(Percentage, fadeInfo, {TextTransparency = 0}):Play()
-TweenService:Create(LoadingBarBG, fadeInfo, {BackgroundTransparency = 0}):Play()
-TweenService:Create(LoadingBarFill, fadeInfo, {BackgroundTransparency = 0}):Play()
-TweenService:Create(SpinnerStroke, fadeInfo, {Transparency = 0}):Play()
-pcall(function() TweenService:Create(Blur, fadeInfo, {Size = 20}):Play() end)
-
--- Rotación del spinner
-local rotationConnection = RunService.RenderStepped:Connect(function(dt)
-    Spinner.Rotation = Spinner.Rotation + (120 * dt)
-end)
-
---// LÓGICA DE CARGA EN SEGUNDO PLANO
-task.spawn(function()
-    local totalTime = 120 -- Los 2 minutos que pediste
-    local passedTime = 0
-    local frases = {"cargando hub :)", "optimizando scripts...", "inyectando módulos...", "verificando bypass...", "conectando al servidor..."}
-    
-    while passedTime < totalTime do
-        local step = 1
-        task.wait(step)
-        passedTime = passedTime + step
-        local progress = passedTime / totalTime
-        Percentage.Text = math.floor(progress * 100) .. "%"
-        SubTitle.Text = frases[math.random(1, #frases)]
-        TweenService:Create(LoadingBarFill, TweenInfo.new(step, Enum.EasingStyle.Linear), {Size = UDim2.new(progress, 0, 1, 0)}):Play()
-    end
-    
-    rotationConnection:Disconnect()
-    ScreenGui:Destroy()
-end)
-
-task.wait(120)
+local HttpService = game:GetService("HttpService")
 
 local FolderName = "ian duels vz"
 local FileName = FolderName.."/config.json"
