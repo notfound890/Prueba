@@ -1,14 +1,5 @@
---// ========================================================
---// Iamhub actual
---// ========================================================
-local noWalkConnection1
-local noWalkConnection2
-local lastPos
-local fovConnection = nil
-local oldFOV = nil
-
+--// SERVICIOS
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -20,14 +11,12 @@ local function getParent()
     return Players.LocalPlayer:WaitForChild("PlayerGui")
 end
 
---// ========================================================
---// 2. CREACIÓN DE LA INTERFAZ DE INTRO 
---// ========================================================
+--// ==========================================
+--// LA INTRO ORIGINAL (PREMIUM)
+--// ==========================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "IanVzHubLoadingPremium"
 ScreenGui.IgnoreGuiInset = true
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = getParent()
 
 local Background = Instance.new("Frame")
@@ -110,7 +99,6 @@ LoadingBarBG.Size = UDim2.new(0.4, 0, 0, 6)
 LoadingBarBG.Position = UDim2.new(0.3, 0, 0.62, 0)
 LoadingBarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 LoadingBarBG.BackgroundTransparency = 1
-LoadingBarBG.BorderSizePixel = 0
 LoadingBarBG.Parent = Background
 Instance.new("UICorner", LoadingBarBG).CornerRadius = UDim.new(1, 0)
 
@@ -118,7 +106,6 @@ local LoadingBarFill = Instance.new("Frame")
 LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
 LoadingBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 LoadingBarFill.BackgroundTransparency = 1
-LoadingBarFill.BorderSizePixel = 0
 LoadingBarFill.Parent = LoadingBarBG
 Instance.new("UICorner", LoadingBarFill).CornerRadius = UDim.new(1, 0)
 
@@ -129,9 +116,7 @@ FillGradient.Color = ColorSequence.new({
 })
 FillGradient.Parent = LoadingBarFill
 
---// ========================================================
---// 3. LÓGICA DE ANIMACIÓN
---// ========================================================
+--// ANIMACIONES INICIALES
 local fadeInfo = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 TweenService:Create(Background, fadeInfo, {BackgroundTransparency = 0.15}):Play()
 TweenService:Create(Title, fadeInfo, {TextTransparency = 0, Position = UDim2.new(0.5, -200, 0.45, -40)}):Play()
@@ -141,76 +126,40 @@ TweenService:Create(Percentage, fadeInfo, {TextTransparency = 0}):Play()
 TweenService:Create(LoadingBarBG, fadeInfo, {BackgroundTransparency = 0}):Play()
 TweenService:Create(LoadingBarFill, fadeInfo, {BackgroundTransparency = 0}):Play()
 TweenService:Create(SpinnerStroke, fadeInfo, {Transparency = 0}):Play()
-
 pcall(function() TweenService:Create(Blur, fadeInfo, {Size = 20}):Play() end)
 
+-- Rotación del spinner
 local rotationConnection = RunService.RenderStepped:Connect(function(dt)
     Spinner.Rotation = Spinner.Rotation + (120 * dt)
 end)
 
+--// LÓGICA DE CARGA EN SEGUNDO PLANO
 task.spawn(function()
-    while Background.Parent do
-        TweenService:Create(TitleGlow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.8}):Play()
-        task.wait(1.5)
-        if not Background.Parent then break end
-        TweenService:Create(TitleGlow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2}):Play()
-        task.wait(1.5)
-    end
-end)
-
-task.spawn(function()
-    local totalTime = 90
+    local totalTime = 120 -- Los 2 minutos que pediste
     local passedTime = 0
-    local frases = {"cargando hub :)", "optimizando scripts...", "inyectando módulos...", "verificando bypass...", "conectando al servidor...", "preparando interfaz...", "cargando librerías..."}
+    local frases = {"cargando hub :)", "optimizando scripts...", "inyectando módulos...", "verificando bypass...", "conectando al servidor..."}
     
     while passedTime < totalTime do
-        local stepTime = math.random(10, 30) / 10 
-        if passedTime + stepTime > totalTime then stepTime = totalTime - passedTime end
-        task.wait(stepTime)
-        passedTime = passedTime + stepTime
+        local step = 1
+        task.wait(step)
+        passedTime = passedTime + step
         local progress = passedTime / totalTime
-        local percentInt = math.floor(progress * 100)
-        
-        if progress < 0.95 then 
-            SubTitle.Text = frases[math.random(1, #frases)] 
-        else 
-            SubTitle.Text = "finalizando carga..." 
-        end
-        
-        Percentage.Text = tostring(percentInt) .. "%"
-        TweenService:Create(LoadingBarFill, TweenInfo.new(stepTime, Enum.EasingStyle.Linear), {Size = UDim2.new(progress, 0, 1, 0)}):Play()
+        Percentage.Text = math.floor(progress * 100) .. "%"
+        SubTitle.Text = frases[math.random(1, #frases)]
+        TweenService:Create(LoadingBarFill, TweenInfo.new(step, Enum.EasingStyle.Linear), {Size = UDim2.new(progress, 0, 1, 0)}):Play()
     end
     
-    SubTitle.Text = "¡IANVZ HUB LISTO!"
-    SubTitle.TextColor3 = Color3.fromRGB(100, 255, 120)
-    Percentage.Text = "100%"
-    TweenService:Create(SpinnerStroke, TweenInfo.new(0.5), {Color = Color3.fromRGB(100, 255, 120)}):Play()
-    
-    task.wait(2)
     rotationConnection:Disconnect()
-    local outInfo = TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-    
-    TweenService:Create(Spinner, outInfo, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.35, 0)}):Play()
-    TweenService:Create(Title, outInfo, {Position = UDim2.new(0.5, -200, 0.45, 50), TextTransparency = 1}):Play()
-    TweenService:Create(SubTitle, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-    TweenService:Create(Percentage, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-    TweenService:Create(LoadingBarBG, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(LoadingBarFill, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(Background, TweenInfo.new(1.5), {BackgroundTransparency = 1}):Play()
-    pcall(function() TweenService:Create(Blur, TweenInfo.new(1.5), {Size = 0}):Play() end)
-    
-    task.wait(1.5)
-    pcall(function() Blur:Destroy() end)
     ScreenGui:Destroy()
 end)
 
---// ========================================================
---// 4. SISTEMA DE CONFI
---// ========================================================
+task.wait(120)
+
 local FolderName = "ian duels vz"
 local FileName = FolderName.."/config.json"
 
 local Config = {
+
     ["Super Jump"] = false,
     ["FOV"] = false,
     ["Lock UI"] = false,
@@ -240,70 +189,95 @@ local Config = {
     ["No Player Collision"] = false,
     ["Fling"] = false,
     ["Instant Grab"] = false,
+
     ["LockButtonX"] = 0.5,
     ["LockButtonY"] = 0.5,
     ["LockButtonOffsetX"] = -70,
     ["LockButtonOffsetY"] = 0,
+
     ["Toggle Button X"] = 1,
     ["Toggle Button Y"] = 0,
     ["Toggle Button OffsetX"] = -70,
     ["Toggle Button OffsetY"] = 70,
+
     ["TP Down Button X"] = 0.5,
     ["TP Down Button Y"] = 0.7,
     ["TP Down Button OffsetX"] = -70,
     ["TP Down Button OffsetY"] = 0,
+
     ["Fling Button X"] = 0.5,
     ["Fling Button Y"] = 0.85,
     ["Fling Button OffsetX"] = -70,
     ["Fling Button OffsetY"] = 0,
+
     ["Walk GUI X"] = 0.5,
     ["Walk GUI Y"] = 0.15,
     ["Walk GUI OffsetX"] = -100,
     ["Walk GUI OffsetY"] = 0,
+
     ["Drop Button X"] = 0.5,
     ["Drop Button Y"] = 0.55,
     ["Drop Button OffsetX"] = -70,
     ["Drop Button OffsetY"] = 0,
+
     ["Spin Button X"] = 0.5,
     ["Spin Button Y"] = 0.75,
     ["Spin Button OffsetX"] = -70,
     ["Spin Button OffsetY"] = 0,
+
     ["AutoPlay GUI X"] = 0.5,
     ["AutoPlay GUI Y"] = 0.15,
     ["AutoPlay GUI OffsetX"] = -100,
     ["AutoPlay GUI OffsetY"] = 0,
+
     ["Speed GUI X"] = 0.5,
     ["Speed GUI Y"] = 0.2,
     ["Speed GUI OffsetX"] = -100,
     ["Speed GUI OffsetY"] = 0,
+
     ["Manual TP"] = 0.8,
     ["TP Button X"] = false,
     ["TP Button Y"] = 0.6,
     ["TP Button OffsetX"] = 0,
     ["TP Button OffsetY"] = 0,
+
+    -- TEXTBOX VALUES
     ["Speed Value"] = 53,
     ["Steal Speed Value"] = 29,
     ["Jump Value"] = 60,
+
     ["AutoPlay Speed"] = 51,
     ["AutoPlay StealSpeed"] = 29,
     ["AutoPlay Cooldown"] = 0.1,
+
     ["Melee Range"] = 20,
     ["Spin Speed"] = 40,
     ["FOV Value"] = 90,
+
+    -- AUTOPLAY POINTS
     ["AutoPlay Point1 X"] = 1,
     ["AutoPlay Point1 Z"] = 1,
+
     ["AutoPlay Point2 X"] = 1,
     ["AutoPlay Point2 Z"] = 1,
+
     ["AutoPlay Point3 X"] = 1,
     ["AutoPlay Point3 Z"] = 1,
+
     ["AutoPlay Point4 X"] = 1,
     ["AutoPlay Point4 Z"] = 1,
+
     ["AutoPlay Point5 X"] = 1,
     ["AutoPlay Point5 Z"] = 1
 }
 
-if not isfolder(FolderName) then makefolder(FolderName) end
-if not isfile(FileName) then writefile(FileName, HttpService:JSONEncode(Config)) end
+if not isfolder(FolderName) then
+    makefolder(FolderName)
+end
+
+if not isfile(FileName) then
+    writefile(FileName, HttpService:JSONEncode(Config))
+end
 
 local function LoadConfig()
 
